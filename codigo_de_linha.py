@@ -3,6 +3,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 from cryptography.fernet import Fernet
 
+def crypt(message):
+  asc=[ord(c) for c in message]
+  result =[]
+  for c in asc:
+    result.append(c+111)
+  result = ''.join(str(a) for a in result)
+  return result
+
+def decrypt(message):
+  result = []
+  for i in range(int(len(message)/3)):
+    char = message[i*3:(i+1)*3]
+    result.append(chr(int(char)-111))
+  return ''.join(result)
+    
 
 def string_to_bits(message):
 
@@ -83,18 +98,21 @@ def decode(message):
           num_zeros=0
         ultimo_sinal=0
 
-  return decoded
+  return ''.join(decoded)
 
 message = 'the quick brówn fôx jumps ùver the lazy dog'
-string_bit = string_to_bits(message)
+encrypted = crypt(message)
+string_bit = string_to_bits(encrypted)
 hdb3_message = hdb3_coding(string_bit)
-decoded = decode(hdb3_message)
-string_decoded = ''.join(decoded)
-message_right = frombits(string_decoded)
 
-print (message)
-print(string_bit)
-print (hdb3_message)
-print(decoded)
-print(string_decoded)
-print(message_right)
+decoded = decode(hdb3_message)
+message_encrypted = frombits(decoded)
+message_decryped = decrypt(message_encrypted)
+
+print (message, '\n')
+print(encrypted, '\n')
+print(string_bit, '\n')
+print (hdb3_message, '\n')
+print(decoded, '\n')
+print(message_encrypted, '\n')
+print(message_decryped, '\n')
