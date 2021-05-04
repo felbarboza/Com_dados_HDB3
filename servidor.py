@@ -21,12 +21,14 @@ if __name__ == "__main__":
       break
     print(data.decode())
     conn.sendall(data)
-    
+
 def startSv(host, port):
+    global socket_server
     socket_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket_server.bind((HOST, PORT))
     socket_server.listen()
-    print("Aguardando cliente")
+    print("socket ligado em ", host, " ", port)
+    return socket_server
 
 def listen(interval):
   socket_server.settimeout(interval)

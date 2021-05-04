@@ -101,7 +101,7 @@ def decode(message):
   return ''.join(decoded)
 
 if __name__ == "__main__": 
-  message = 'the quick brówn fôx jumps ùver the lazy dog'
+  message = 'oi'
   encrypted = crypt(message)
   string_bit = string_to_bits(encrypted)
   hdb3_message = hdb3_coding(string_bit)

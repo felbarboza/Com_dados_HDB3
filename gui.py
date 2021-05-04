@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 from numpy.core.numeric import tensordot
 import codigo_de_linha as cod
 import servidor as sv
+import cliente as cl
 
 HEIGHT = 400
 WIDTH = 800
-DATA_TESTE_ENVIO = ["+", "-", "0", "-", "+", "+", "+"]
 DATA_TESTE_RECEBIDO = ["+", "-", "0", "-", "+", "+", "+"]
 
 root = tk.Tk()
@@ -31,10 +31,11 @@ msg_descodificada = tk.StringVar()
 msg_descodificada.set("")
 
 svPort = tk.StringVar()
-svPort.set("Host")
+svPort.set("Port")
 
 svAddr = tk.StringVar()
 svAddr.set("Addr")
+
 
 def criptografarMensagem():
     label_msg_criptografada.config(text=cod.crypt(msg_codificada.get()))
@@ -43,7 +44,9 @@ def binarizarMensagem():
     label_msg_binarizada.config(text=cod.string_to_bits(cod.crypt(msg_codificada.get())))
 
 def aplicarCodificacao():
-    label_msg_aplicar_codificacao.config(text=cod.hdb3_coding(cod.string_to_bits(cod.crypt(msg_codificada.get()))))
+    global msg_sent
+    msg_sent = cod.hdb3_coding(cod.string_to_bits(cod.crypt(msg_codificada.get())))
+    label_msg_aplicar_codificacao.config(text=msg_sent)
 
 
 
@@ -56,7 +59,7 @@ def gerarGraficoEnvio():
     plt.show()
 
 def gerarGraficoRecebido():
-    data = cod.hdb3_coding(cod.string_to_bits(cod.crypt(msg_codificada.get())))
+    data = data_recept
     bin_data = graficalizar(data)
     x = np.arange(len(bin_data))
     y = np.array(bin_data)
@@ -64,17 +67,23 @@ def gerarGraficoRecebido():
     plt.show()
 
 def enviar():
-    print()
+    cl.enviar(int(svPort.get()), svAddr.get(), msg_sent)
 
 def iniciarServidor():
-    sv.startSv(svAddr.get(), svPort.get())
+    socket_server = sv.startSv('localhost', 6969)
 
 def ouvir():
     msg = sv.listen(10)
+    lmsg = list(msg)
+    lmsg2 = list()
+    for i in lmsg:
+        lmsg2.append(chr(i))
+    global data_recept
+    data_recept = lmsg2
     label_msg_recebida_codificada.config(text=msg)
-    label_msg_recebida_decodificada.config(text=cod.decode(msg))
-    label_msg_recebida_decriptografada(text=cod.decrypt(cod.decode(msg)))
-    label_msg_recebida_desbinarizada(text=cod.frombits(cod.decrypt(cod.decode(msg))))
+    label_msg_recebida_decodificada.config(text=cod.decode(lmsg2))
+    label_msg_recebida_desbinarizada.config(text=cod.frombits(cod.decode(lmsg2)))
+    label_msg_recebida_decriptografada.config(text=cod.decrypt(cod.frombits(cod.decode(lmsg2))))
 
 canvas = tk.Canvas(root, height=HEIGHT, width=WIDTH)
 canvas.pack()
@@ -118,6 +127,12 @@ btn_gerar_grafico.grid(row=6, column=0)
 btn_enviar = tk.Button(frame, text="Enviar", command = enviar)
 btn_enviar.grid(row=6, column=1)
 
+label_sv_port = tk.Entry(frame, bd = 5, textvariable = svPort)
+label_sv_port.grid(row=7, column=0)
+
+label_sv_addr = tk.Entry(frame, bd = 5, textvariable = svAddr)
+label_sv_addr.grid(row=8, column=0)
+
 # Separação
 
 frame_separate = tk.Frame(frame, bg='#282828', width=50, height=20)
@@ -127,58 +142,57 @@ frame_separate.grid(row=1, column=2)
 
 #### Receptor ####
 
-label_sv_port = tk.Entry(frame, bd = 5, textvariable = svPort)
-label_sv_port.grid(row=1, column=4)
-
-label_sv_addr = tk.Entry(frame, bd = 5, textvariable = svAddr)
-label_sv_addr.grid(row=0, column=4)
-
 
 btn_iniciarServidor = tk.Button(frame, text="Iniciar servidor", command = iniciarServidor)
 btn_iniciarServidor.grid(row=0, column=3)
 
+btn_ouvir = tk.Button(frame, text="Receber", command = ouvir)
+btn_ouvir.grid(row=1, column=3)
+
 # Recepção
 
 label_recebida_codificada = tk.Label(frame, text= "Mensagem recebida:")
-label_recebida_codificada.grid(row=1, column=3)
+label_recebida_codificada.grid(row=2, column=3)
 
 label_msg_recebida_codificada = tk.Label(frame, text= "", wraplength=200)
 label_msg_recebida_codificada.config(text="<aguardando receber mensagem>")
-label_msg_recebida_codificada.grid(row=2, column=3)
+label_msg_recebida_codificada.grid(row=3, column=3)
 
 # Apresentar o gráfico
 
 btn_gerar_grafico_recebido = tk.Button(frame, text="Gerar gráfico", command = gerarGraficoRecebido)
-btn_gerar_grafico_recebido.grid(row=3, column=3)
+btn_gerar_grafico_recebido.grid(row=4, column=3)
 
 # Aplicar o algoritmo de codificação de linha de modo inverso
 
 label_recebida_decodificada = tk.Label(frame, text= "Mensagem decodificada:")
-label_recebida_decodificada.grid(row=4, column=3)
+label_recebida_decodificada.grid(row=5, column=3)
 
 label_msg_recebida_decodificada = tk.Label(frame, text= "", wraplength=200)
 label_msg_recebida_decodificada.config(text="<aguardando decodificação>")
-label_msg_recebida_decodificada.grid(row=5, column=3)
+label_msg_recebida_decodificada.grid(row=6, column=3)
 
 # Transformação de binário para ASCII
 
 label_recebida_desbinarizada = tk.Label(frame, text= "Mensagem em binário -> ASCII:")
-label_recebida_desbinarizada.grid(row=6, column=3)
+label_recebida_desbinarizada.grid(row=7, column=3)
 
 label_msg_recebida_desbinarizada = tk.Label(frame, text= "", wraplength=200)
 label_msg_recebida_desbinarizada.config(text="<aguardando conversão>")
-label_msg_recebida_desbinarizada.grid(row=7, column=3)
+label_msg_recebida_desbinarizada.grid(row=8, column=3)
 
 # Aplicar o algoritmo de criptografia inverso
 
 label_recebida_decriptografada = tk.Label(frame, text= "Mensagem decriptografada:")
-label_recebida_decriptografada.grid(row=8, column=3)
+label_recebida_decriptografada.grid(row=9, column=3)
 
 # Mostrar a mensagem
 
 label_msg_recebida_decriptografada = tk.Label(frame, text= "", wraplength=200)
 label_msg_recebida_decriptografada.config(text="<aguardando decriptografia>")
-label_msg_recebida_decriptografada.grid(row=9, column=3)
+label_msg_recebida_decriptografada.grid(row=10, column=3)
+
+
 
 
 root.mainloop()
