@@ -1,7 +1,7 @@
 import socket
 
-HOST = '192.168.15.6'
-PORT = 50000
+HOST = '127.0.0.1'
+PORT = 7777
 
 socket_cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_cliente.connect((HOST, PORT))
